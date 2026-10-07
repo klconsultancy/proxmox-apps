@@ -32,3 +32,8 @@ ansible/molecule: $(VENV)
 		echo "--- molecule: $$role ---"; \
 		(cd "$$role" && PATH="$(CURDIR)/$(VENV)/bin:$$PATH" MOLECULE_EPHEMERAL_DIRECTORY="$$PWD/.molecule-ephemeral" molecule test) || exit 1; \
 	done
+
+# Compares what manifest.yaml references with Upstream's current head.
+.PHONY: drift
+drift: $(VENV)
+	$(VENV)/bin/python scripts/check_drift.py
