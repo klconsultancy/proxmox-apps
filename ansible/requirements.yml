@@ -1,0 +1,5 @@
+collections:
+  - name: maxhoesel.caddy
+    version: ">=6.1.0"
+  # For the Molecule Docker driver.
+  - name: community.docker

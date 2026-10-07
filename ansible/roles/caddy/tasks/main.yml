@@ -1,0 +1,40 @@
+---
+# Upstream refreshes the package lists before installing anything; the role
+# underneath installs its requirements without doing so.
+- name: Package lists are current
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Caddy package version is pinned
+  ansible.builtin.copy:
+    content: |
+      Package: caddy
+      Pin: version {{ caddy_version }}*
+      Pin-Priority: 1001
+    dest: /etc/apt/preferences.d/caddy
+    owner: root
+    group: root
+    mode: "0644"
+  when: caddy_version | length > 0
+
+- name: Caddy package version is not pinned
+  ansible.builtin.file:
+    path: /etc/apt/preferences.d/caddy
+    state: absent
+  when: caddy_version | length == 0
+
+- name: Caddy is installed
+  ansible.builtin.include_role:
+    name: maxhoesel.caddy.caddy_server
+  vars:
+    caddy_apply_config: "{{ caddy_manage_config }}"
+    caddy_config_mode: "{{ caddy_config_format }}"
+
+# The role above installs caddy once and leaves it. This moves an existing
+# install to the pinned version, or to the newest one when nothing is pinned.
+- name: Caddy is at the requested version
+  ansible.builtin.apt:
+    name: "{{ ('caddy=' ~ caddy_version ~ '*') if caddy_version | length > 0 else 'caddy' }}"
+    state: "{{ 'present' if caddy_version | length > 0 else 'latest' }}"
+    allow_downgrade: true
