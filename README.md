@@ -17,7 +17,7 @@ See [`CONTEXT.md`](CONTEXT.md) for the vocabulary and [`docs/adr/`](docs/adr/) f
 
 ## Status
 
-Early. No apps are translated yet.
+Early. The generic `lxc` module exists; no apps are translated yet.
 
 ## License
 
