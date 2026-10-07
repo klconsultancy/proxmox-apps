@@ -35,3 +35,18 @@ parts:
       - what: The template is passed in by the caller.
         upstream: Finds, downloads and falls back between templates and storages interactively.
         why: Selection logic exists for the interactive flow; a caller declares the template it wants.
+
+  terraform/apps/caddy:
+    generated_by: scripts/generate_app_module.py
+    reviewed_at:
+      ProxmoxVE: ea59019670202b740b4bd11c03f6ab4e746cc46f
+    sources:
+      - repo: ProxmoxVE
+        path: ct/caddy.sh
+    deviations:
+      - what: Debian only.
+        upstream: Offers Alpine as an alternative, with smaller resource values.
+        why: Only Debian is translated.
+      - what: The tag `community-script` is not set.
+        upstream: Every container is tagged `community-script`.
+        why: The container is not created by the script.
