@@ -1,0 +1,37 @@
+# Which Upstream files each part of this repository was derived from, at which
+# commit it was last reviewed, and where it deliberately differs. App scripts
+# are tracked per file, Helpers per function. See CONTEXT.md and docs/adr/0001.
+
+upstream:
+  core: https://github.com/community-scripts/core
+  ProxmoxVE: https://github.com/community-scripts/ProxmoxVE
+
+parts:
+  terraform/modules/lxc:
+    reviewed_at:
+      core: 6db68f6a9ab2c0aeb1032d6c18892ef96955190f
+    sources:
+      - repo: core
+        path: pve/backend.func
+        functions:
+          - build_container
+          - create_lxc_container
+    deviations:
+      - what: keyctl is off by default.
+        upstream: keyctl=1 on every unprivileged container, so Docker can run in it.
+        why: It weakens isolation and only Docker-in-LXC needs it.
+      - what: /dev/net/tun is passed through as a device.
+        upstream: Raw lxc.cgroup2.devices.allow and lxc.mount.entry lines in the container config.
+        why: The provider cannot write raw lxc.* lines; device passthrough is the supported equivalent.
+      - what: Devices are named explicitly; a privileged container gets no USB access by itself.
+        upstream: GPUs and a Coral TPU are detected on the host; a privileged container gets all devices and the USB serial nodes.
+        why: Terraform declares state and does not probe the host. Blanket device access is an access decision.
+      - what: Root has SSH keys only.
+        upstream: An optional root password, and automatic console login without one.
+        why: Access and hardening are not taken from Upstream.
+      - what: The timezone is not set.
+        upstream: pct -timezone.
+        why: The provider has no attribute for it; it is left to configuration management.
+      - what: The template is passed in by the caller.
+        upstream: Finds, downloads and falls back between templates and storages interactively.
+        why: Selection logic exists for the interactive flow; a caller declares the template it wants.
