@@ -19,12 +19,13 @@
 
     - name: Read the repository definition
       ansible.builtin.slurp:
-        path: /etc/apt/sources.list.d/caddy-stable.sources
+        path: /etc/apt/sources.list.d/caddy.sources
       register: caddy_repository
 
     - name: Caddy comes from Upstream's repository
       ansible.builtin.assert:
         that:
+          - "'Types: deb\n' in caddy_repository.content | b64decode"
           - "'URIs: https://dl.cloudsmith.io/public/caddy/stable/deb/debian' in caddy_repository.content | b64decode"
           - "'Suites: any-version' in caddy_repository.content | b64decode"
           - "'Components: main' in caddy_repository.content | b64decode"

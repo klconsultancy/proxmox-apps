@@ -1,10 +1,39 @@
 ---
-# Upstream refreshes the package lists before installing anything; the role
-# underneath installs its requirements without doing so.
+# Upstream refreshes the package lists before installing. apt fails the refresh
+# as a whole when a single source fails, but keeps the lists it had, so a
+# failure is reported and the rest runs against those.
 - name: Package lists are current
   ansible.builtin.apt:
     update_cache: true
     cache_valid_time: 3600
+  ignore_errors: true
+  register: caddy_apt_update
+
+- name: Warn about package lists that could not be refreshed
+  ansible.builtin.debug:
+    msg: >-
+      apt update failed, continuing with the existing package lists:
+      {{ caddy_apt_update.msg | default('no message') }}
+  when: caddy_apt_update is failed
+
+# python3-debian is not Upstream's; the repository module below needs it.
+- name: Dependencies are installed
+  ansible.builtin.apt:
+    name:
+      - debian-keyring
+      - debian-archive-keyring
+      - apt-transport-https
+      - python3-debian
+
+- name: Caddy repository is configured
+  ansible.builtin.deb822_repository:
+    name: caddy
+    types: deb
+    uris: https://dl.cloudsmith.io/public/caddy/stable/deb/debian
+    suites: any-version
+    components: main
+    signed_by: https://dl.cloudsmith.io/public/caddy/stable/gpg.key
+  register: caddy_repository
 
 - name: Caddy package version is pinned
   ansible.builtin.copy:
@@ -24,17 +53,35 @@
     state: absent
   when: caddy_version | length == 0
 
-- name: Caddy is installed
-  ansible.builtin.include_role:
-    name: maxhoesel.caddy.caddy_server
-  vars:
-    caddy_apply_config: "{{ caddy_manage_config }}"
-    caddy_config_mode: "{{ caddy_config_format }}"
-
-# The role above installs caddy once and leaves it. This moves an existing
-# install to the pinned version, or to the newest one when nothing is pinned.
-- name: Caddy is at the requested version
+# The lists are refreshed here only when the repository was just added. Any
+# other time they are as current as the first task could get them, and a
+# refresh here would fail on whichever source is unreachable.
+- name: Caddy is installed at the requested version
   ansible.builtin.apt:
     name: "{{ ('caddy=' ~ caddy_version ~ '*') if caddy_version | length > 0 else 'caddy' }}"
     state: "{{ 'present' if caddy_version | length > 0 else 'latest' }}"
     allow_downgrade: true
+    update_cache: "{{ caddy_repository.changed }}"
+
+- name: Plugins are installed
+  ansible.builtin.include_role:
+    name: maxhoesel.caddy.caddy_server
+    tasks_from: customize.yml
+  vars:
+    caddy_config_mode: "{{ caddy_config_format }}"
+  when: caddy_custom_additional_modules | default([]) | length > 0
+
+- name: Requirements of the JSON configuration are installed
+  ansible.builtin.apt:
+    name: python3-requests
+  when:
+    - caddy_manage_config
+    - caddy_config_format == "json"
+
+- name: Configuration is applied
+  ansible.builtin.include_role:
+    name: maxhoesel.caddy.caddy_server
+    tasks_from: "config_{{ caddy_config_format | lower }}.yml"
+  vars:
+    caddy_config_mode: "{{ caddy_config_format }}"
+  when: caddy_manage_config

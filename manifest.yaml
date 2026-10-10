@@ -52,7 +52,7 @@ parts:
         why: The container is not created by the script.
 
   ansible/roles/caddy:
-    built_on: maxhoesel.caddy >= 6.1.0
+    built_on: maxhoesel.caddy >= 6.1.0, for configuration and plugins only
     reviewed_at:
       ProxmoxVE: ea59019670202b740b4bd11c03f6ab4e746cc46f
       core: 0feec7a5b9610fad882f69caf0f65e8be278d743
@@ -69,12 +69,15 @@ parts:
       - what: xcaddy is not installed.
         upstream: Offers to install Go and xcaddy, default no.
         why: Plugins are added through the collection, which downloads a build instead of compiling one.
-      - what: The repository is /etc/apt/sources.list.d/caddy-stable.sources, with deb-src enabled.
-        upstream: /etc/apt/sources.list.d/caddy.sources with the key in /etc/apt/keyrings/caddy.gpg, deb only.
-        why: That is how the collection writes it. Same repository, same suite, same package.
-      - what: python3-requests and python3-debian are installed as well.
+      - what: The repository key is /etc/apt/keyrings/caddy.asc, as downloaded.
+        upstream: Dearmored into /etc/apt/keyrings/caddy.gpg.
+        why: That is how the built-in repository module stores an armored key. apt reads both.
+      - what: python3-debian is installed as well.
         upstream: Not installed.
-        why: The collection's modules need them on the host.
+        why: The built-in repository module needs it on the host.
+      - what: A failed refresh of the package lists is reported and does not stop the run.
+        upstream: apt update failing stops the script.
+        why: Another repository on the host being unreachable should not block a run on a host where Caddy is installed.
       - what: A version of the caddy package can be pinned.
         upstream: Always the newest.
         why: A deployment has to be reproducible. Without a pin the newest is installed, as Upstream does.

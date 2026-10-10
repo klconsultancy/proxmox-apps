@@ -30,7 +30,7 @@ ansible/molecule: $(VENV)
 	@for role in ansible/roles/$(or $(ROLE),*)/; do \
 		[ -d "$$role/molecule" ] || continue; \
 		echo "--- molecule: $$role ---"; \
-		(cd "$$role" && PATH="$(CURDIR)/$(VENV)/bin:$$PATH" MOLECULE_EPHEMERAL_DIRECTORY="$$PWD/.molecule-ephemeral" molecule test) || exit 1; \
+		(cd "$$role" && PATH="$(CURDIR)/$(VENV)/bin:$$PATH" MOLECULE_EPHEMERAL_DIRECTORY="$$PWD/.molecule-ephemeral" molecule test --all) || exit 1; \
 	done
 
 # Compares what manifest.yaml references with Upstream's current head.

@@ -4,7 +4,7 @@ One role per App, each installing what the matching community-scripts install sc
 
 | Role | Upstream | Built on |
 |---|---|---|
-| [`caddy`](roles/caddy/README.md) | `install/caddy-install.sh` | `maxhoesel.caddy` |
+| [`caddy`](roles/caddy/README.md) | `install/caddy-install.sh` | `maxhoesel.caddy`, for configuration and plugins |
 
 ## Install
 
