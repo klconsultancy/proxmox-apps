@@ -35,3 +35,55 @@ parts:
       - what: The template is passed in by the caller.
         upstream: Finds, downloads and falls back between templates and storages interactively.
         why: Selection logic exists for the interactive flow; a caller declares the template it wants.
+
+  terraform/apps/caddy:
+    generated_by: scripts/generate_app_module.py
+    reviewed_at:
+      ProxmoxVE: ea59019670202b740b4bd11c03f6ab4e746cc46f
+    sources:
+      - repo: ProxmoxVE
+        path: ct/caddy.sh
+    deviations:
+      - what: Debian only.
+        upstream: Offers Alpine as an alternative, with smaller resource values.
+        why: Only Debian is translated.
+      - what: The tag `community-script` is not set.
+        upstream: Every container is tagged `community-script`.
+        why: The container is not created by the script.
+
+  ansible/roles/caddy:
+    built_on: maxhoesel.caddy >= 6.1.0, for configuration and plugins only
+    reviewed_at:
+      ProxmoxVE: ea59019670202b740b4bd11c03f6ab4e746cc46f
+      core: 0feec7a5b9610fad882f69caf0f65e8be278d743
+    sources:
+      - repo: ProxmoxVE
+        path: install/caddy-install.sh
+      - repo: ProxmoxVE
+        path: ct/caddy.sh
+      - repo: core
+        path: lib/system.func
+        functions:
+          - setup_deb822_repo
+    deviations:
+      - what: xcaddy is not installed.
+        upstream: Offers to install Go and xcaddy, default no.
+        why: Plugins are added through the collection, which downloads a build instead of compiling one.
+      - what: The repository key is /etc/apt/keyrings/caddy.asc, as downloaded.
+        upstream: Dearmored into /etc/apt/keyrings/caddy.gpg.
+        why: That is how the built-in repository module stores an armored key. apt reads both.
+      - what: python3-debian is installed as well.
+        upstream: Not installed.
+        why: The built-in repository module needs it on the host.
+      - what: A failed refresh of the package lists is reported and does not stop the run.
+        upstream: apt update failing stops the script.
+        why: Another repository on the host being unreachable should not block a run on a host where Caddy is installed.
+      - what: A version of the caddy package can be pinned.
+        upstream: Always the newest.
+        why: A deployment has to be reproducible. Without a pin the newest is installed, as Upstream does.
+      - what: Updating moves the caddy package only.
+        upstream: update runs apt upgrade for the whole system.
+        why: Keeping the system current is not this role's job.
+      - what: Debian only.
+        upstream: Has an Alpine path with its own Caddyfile and OpenRC service.
+        why: Only Debian is translated.

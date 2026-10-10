@@ -1,0 +1,12 @@
+---
+# Version of the caddy package to hold the host at, e.g. "2.10.2". Empty installs
+# the newest one, as Upstream does.
+caddy_version: ""
+
+# Upstream leaves the packaged Caddyfile in place. Set to true to apply
+# caddy_caddyfile or caddy_json_config of maxhoesel.caddy.caddy_server.
+caddy_manage_config: false
+
+# "Caddyfile" runs the caddy service, as Upstream does. "json" runs caddy-api
+# instead, configured through Caddy's API.
+caddy_config_format: Caddyfile

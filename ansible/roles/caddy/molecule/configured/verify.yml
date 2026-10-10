@@ -1,0 +1,32 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Ask Caddy on the configured port
+      ansible.builtin.uri:
+        url: http://localhost:8080
+        return_content: true
+      register: caddy_response
+
+    - name: The managed Caddyfile is the one Caddy serves
+      ansible.builtin.assert:
+        that: caddy_response.content == "configured"
+
+    - name: List the modules of the running binary
+      ansible.builtin.command: caddy list-modules
+      register: caddy_modules
+      changed_when: false
+
+    - name: The plugin is part of the binary
+      ansible.builtin.assert:
+        that: "'dns.providers.cloudflare' in caddy_modules.stdout"
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: The caddy service runs and the update timer does not
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['caddy.service'].state == 'running'
+          - ansible_facts.services['caddy.service'].status == 'enabled'
+          - ansible_facts.services['caddy-custom-update.service'].state != 'running'

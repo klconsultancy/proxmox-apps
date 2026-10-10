@@ -1,0 +1,27 @@
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../../requirements.yml
+driver:
+  name: docker
+# The role installs a package with a systemd service, so the container runs
+# systemd as PID 1. cgroupns_mode: host keeps systemd from exiting at start on
+# a cgroup v2 host.
+platforms:
+  - name: caddy
+    image: geerlingguy/docker-debian13-ansible
+    pre_build_image: true
+    privileged: true
+    command: /lib/systemd/systemd
+    cgroupns_mode: host
+    tmpfs:
+      - /run
+      - /run/lock
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: "../../../"
+verifier:
+  name: ansible

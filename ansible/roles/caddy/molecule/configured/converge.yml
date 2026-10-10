@@ -1,0 +1,15 @@
+---
+# A managed Caddyfile and a plugin: the two things handed to the collection.
+- name: Converge
+  hosts: all
+  vars:
+    caddy_manage_config: true
+    caddy_caddyfile: |
+      :8080 {
+      	respond "configured"
+      }
+    caddy_custom_additional_modules:
+      - github.com/caddy-dns/cloudflare
+    caddy_custom_update_timer_enabled: false
+  roles:
+    - role: caddy

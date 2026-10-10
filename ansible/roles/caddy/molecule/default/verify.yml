@@ -1,0 +1,60 @@
+---
+# The state install/caddy-install.sh leaves behind on Debian, without the
+# optional xcaddy addon.
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+
+    - name: Upstream's packages are installed
+      ansible.builtin.assert:
+        that: item in ansible_facts.packages
+        fail_msg: "{{ item }} is not installed"
+      loop:
+        - debian-keyring
+        - debian-archive-keyring
+        - apt-transport-https
+        - caddy
+
+    - name: Read the repository definition
+      ansible.builtin.slurp:
+        path: /etc/apt/sources.list.d/caddy.sources
+      register: caddy_repository
+
+    - name: Caddy comes from Upstream's repository
+      ansible.builtin.assert:
+        that:
+          - "'Types: deb\n' in caddy_repository.content | b64decode"
+          - "'URIs: https://dl.cloudsmith.io/public/caddy/stable/deb/debian' in caddy_repository.content | b64decode"
+          - "'Suites: any-version' in caddy_repository.content | b64decode"
+          - "'Components: main' in caddy_repository.content | b64decode"
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: The caddy service is enabled and running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['caddy.service'].state == 'running'
+          - ansible_facts.services['caddy.service'].status == 'enabled'
+
+    - name: Stat the Caddyfile
+      ansible.builtin.stat:
+        path: /etc/caddy/Caddyfile
+      register: caddy_caddyfile_stat
+
+    - name: The packaged Caddyfile is in place
+      ansible.builtin.assert:
+        that: caddy_caddyfile_stat.stat.exists
+
+    - name: Caddy answers on port 80
+      ansible.builtin.uri:
+        url: http://localhost:80
+        status_code: 200
+
+    - name: The package is not pinned by default
+      ansible.builtin.stat:
+        path: /etc/apt/preferences.d/caddy
+      register: caddy_pin_stat
+      failed_when: caddy_pin_stat.stat.exists

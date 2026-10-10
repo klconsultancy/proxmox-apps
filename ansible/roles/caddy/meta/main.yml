@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  author: Kristof Lemmens
+  description: Installs Caddy as the community-scripts caddy script does
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions:
+        - trixie
+dependencies: []

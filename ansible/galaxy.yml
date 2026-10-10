@@ -1,0 +1,15 @@
+namespace: klconsultancy
+name: proxmox_apps
+version: 0.1.0
+readme: README.md
+authors:
+  - Kristof Lemmens
+description: Ansible roles that install the apps of the community-scripts Proxmox VE helper scripts
+license:
+  - MIT
+tags:
+  - proxmox
+  - infrastructure
+repository: https://github.com/klconsultancy/proxmox-apps
+dependencies:
+  maxhoesel.caddy: ">=6.1.0"
